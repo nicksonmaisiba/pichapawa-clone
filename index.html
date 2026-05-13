@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pichapawa - Event Photo Sharing & AI Collective Hub</title>
+    <!-- Tailwind CSS for modern glassmorphism UI -->
+    <script src="tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="cloudflare.com">
+    <!-- QRCode.js for automated live setup -->
+    <script src="cloudflare.com"></script>
+    <!-- JSZip for batch download compilation -->
+    <script src="cloudflare.com"></script>
+    
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #090514 100%);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="border-b border-slate-800/60 sticky top-0 z-50 bg-slate-950/70 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-camera text-white text-lg"></i>
+                </div>
+                <span class="text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">PICHAPAWA</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleView('dashboard')" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Dashboard</button>
+                <button onclick="triggerBatchDownload()" id="downloadAllBtn" class="hidden items-center gap-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white px-3 py-1.5 rounded-lg transition-all shadow-md shadow-indigo-600/10">
+                    <i class="fa-solid fa-download"></i> Zip Archive
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- View 1: Event Creator Dashboard Setup -->
+        <section id="dashboardView" class="space-y-8 animate-fade-in">
+            <div class="max-w-xl mx-auto text-center space-y-3">
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Collect every photo from your event effortlessly</h1>
+                <p class="text-sm text-slate-400">No app downloads or guest accounts required. Just scan, snap, and upload instantly.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <!-- Configurator Panel -->
+                <div class="md:col-span-1 glass rounded-2xl p-6 space-y-5 shadow-xl">
+                    <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Event Configurations
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Event Name</label>
+                            <input type="text" id="eventNameInput" value="Ruaraka Gala Night" class="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Photo Limit per Guest</label>
+                            <select id="photoLimitSelect" class="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors text-white">
+                                <option value="5">5 Photos</option>
+                                <option value="20" selected>20 Photos</option>
+                                <option value="100">Unlimited</option>
+                            </select>
+                        </div>
+                        <button onclick="generateLiveQR()" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium text-sm py-2.5 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/10">
+                            Update & Refresh Portal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Generated QR Code Engine Display -->
+                <div class="md:col-span-1 glass rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+                    <h3 id="liveEventTitle" class="text-sm font-bold text-slate-200">Ruaraka Gala Night</h3>
+                    <div class="bg-white p-3.5 rounded-2xl shadow-inner shadow-black/20" id="qrcodeCanvas"></div>
+                    <p class="text-xs text-slate-400 max-w-[200px]">Point any mobile camera to scan and open this guest photo portal directly.</p>
+                    <button onclick="toggleView('guest')" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors">
+                        Simulate Live Guest View <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
+                </div>
+
+                <!-- Live Analytics Dashboard metrics -->
+                <div class="md:col-span-1 grid grid-cols-1 gap-4">
+                    <div class="glass rounded-2xl p-5 flex items-center gap-4 shadow-md">
+                        <div class="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400"><i class="fa-solid fa-image text-lg"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Total Images Live</p>
+                            <h4 id="countTotal" class="text-xl font-bold text-white">0</h4>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 flex items-center gap-4 shadow-md">
+                        <div class="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400"><i class="fa-solid fa-users text-lg"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Active Upload Sources</p>
+                            <h4 id="countSources" class="text-xl font-bold text-white">0</h4>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-5 flex items-center gap-4 shadow-md">
+                        <div class="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400"><i class="fa-solid fa-hard-drive text-lg"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Allocated Client Memory</p>
+                            <h4 id="countStorage" class="text-xl font-bold text-white">0.0 MB</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 2: Guest Quick Capture Portal -->
+        <section id="guestView" class="hidden max-w-xl mx-auto space-y-6 animate-fade-in">
+            <div class="glass rounded-3xl p-6 text-center space-y-4 border-indigo-500/20 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl"></div>
+                
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 uppercase tracking-widest">
+                    <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span> Guest Portal Active
+                </span>
+                <h2 id="guestPortalHeading" class="text-2xl font-black text-white">Ruaraka Gala Night</h2>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto">Upload clean media streams straight to the screen instantly.</p>
+
+                <!-- Hidden Input and Beautiful Target Action Box -->
+                <input type="file" id="mediaUploadInput" accept="image/*" multiple class="hidden" onchange="processMediaUpload(this.files)">
+                <div onclick="document.getElementById('mediaUploadInput').click()" class="border-2 border-dashed border-slate-700 hover:border-indigo-500/60 rounded-2xl p-8 cursor-pointer transition-all bg-slate-900/40 group hover:bg-slate-900/70">
+                    <div class="space-y-2 pointer-events-none">
+                        <div class="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-slate-400 group-hover:scale-110 group-hover:text-indigo-400 transition-all">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-slate-300">Tap to snap or upload files</p>
+                        <p class="text-[11px] text-slate-500" id="limitTextHint">Supports up to 20 images max</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Shared UI Framework: Live Real-Time Feed Container Grid -->
+        <section id="gallerySection" class="mt-12 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-photo-film text-slate-500"></i> Event Photo Grid stream
+                </h3>
+                <span id="galleryCounter" class="text-xs font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md">0 items</span>
+            </div>
+            
+            <!-- Empty state fallback view -->
+            <div id="emptyState" class="text-center py-20 glass rounded-2xl border-dashed border-slate-800">
+                <i class="fa-regular fa-images text-4xl text-slate-600 mb-2"></i>
+                <p class="text-sm text-slate-400 font-medium">No photos captured yet</p>
+                <p class="text-xs text-slate-600">Scan code above to populate collective timeline</p>
+            </div>
+
+            <!-- Dynamic grid pipeline injection target -->
+            <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+        </section>
+
+    </main>
+
+    <!-- PWA Local Manifest Integration Setup Configuration Block via standard DataURI Scheme injection -->
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Pichapawa%22,%22short_name%22:%22Pichapawa%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23090514%22,%22theme_color%22:%22%231e1b4b%22}">
+
+    <script>
+        // Reactive App State Pipeline Storage Interface Object
+        let appState = {
+            eventName: "Ruaraka Gala Night",
+            photoLimit: 20,
+            uploadedPhotos: []
+        };
+
+        // Initialize runtime sequence routines
+        window.addEventListener('DOMContentLoaded', () => {
+            generateLiveQR();
+            renderDynamicMetrics();
+        });
+
+        // Toggle state views via routing controllers
+        function toggleView(target) {
+            const dash = document.getElementById('dashboardView');
+            const guest = document.getElementById('guestView');
+            if(target === 'dashboard') {
+                dash.classList.remove('hidden');
+                guest.classList.add('hidden');
+            } else {
+                dash.classList.add('hidden');
+                guest.classList.remove('hidden');
+            }
+        }
+
+        // Live Dynamic QR code generation layer logic engine
+        function generateLiveQR() {
+            const nameInput = document.getElementById('eventNameInput').value.trim();
+            const limitSelect = document.getElementById('photoLimitSelect').value;
+            
+            appState.eventName = nameInput || "Event Hub";
+            appState.photoLimit = parseInt(limitSelect);
+
+            document.getElementById('liveEventTitle').innerText = appState.eventName;
+            document.getElementById('guestPortalHeading').innerText = appState.eventName;
+            document.getElementById('limitTextHint').innerText = `Supports up to ${appState.photoLimit} images max`;
+
+            const canvasTarget = document.getElementById('qrcodeCanvas');
+            canvasTarget.innerHTML = "";
+            
+            // Build absolute URL for production deployment fallback
+            const deploymentUrl = window.location.href;
+            
+            new QRCode(canvasTarget, {
+                text: deploymentUrl,
+                width: 140,
+                height: 140,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        // Parallel processing file processor pipelines
+        function processMediaUpload(filesList) {
+            if(!filesList || filesList.length === 0) return;
+
+            const remainingSlots = appState.photoLimit - appState.uploadedPhotos.length;
+            const absoluteProcessLimit = Math.min(filesList.length, remainingSlots);
+
+            if(remainingSlots <= 0) {
+                alert(`Upload execution cap met. Absolute configuration limit strictly capped at ${appState.photoLimit} assets.`);
+                return;
+            }
+
+            for(let i = 0; i < absoluteProcessLimit; i++) {
+                const currentFile = filesList[i];
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function(event) {
+                    const base64Data = event.target.result;
+                    const calculatedSizeMB = (currentFile.size / (1024 * 1024));
+                    
+                    appState.uploadedPhotos.unshift({
+                        id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        payload: base64Data,
+                        size: calculatedSizeMB
+                    });
+
+                    renderDynamicMetrics();
+                };
+                fileReader.readAsDataURL(currentFile);
+            }
+        }
+
+        // Live state syncing UI re-rendering engine loop
+        function renderDynamicMetrics() {
+            const emptyState = document.getElementById('emptyState');
+            const galleryGrid = document.getElementById('galleryGrid');
+            const zipBtn = document.getElementById('downloadAllBtn');
+            const galleryCounter = document.getElementById('galleryCounter');
+
+            // Metric tracking element tags
+            const totalUI = document.getElementById('countTotal');
+            const sourceUI = document.getElementById('countSources');
+            const storageUI = document.getElementById('countStorage');
+
+            const assetCount = appState.uploadedPhotos.length;
+            galleryCounter.innerText = `${assetCount} items`;
+            totalUI.innerText = assetCount;
+            
+            // Track source simulators contextually
+            sourceUI.innerText = assetCount > 0 ? Math.ceil(assetCount / 2.3) : 0;
+
+            // Size accumulation process calculation metrics block
+            let computedMemorySum = 0;
+            appState.uploadedPhotos.forEach(item => computedMemorySum += item.size);
+            storageUI.innerText = `${computedMemorySum.toFixed(2)} MB`;
+
+            if(assetCount === 0) {
+                emptyState.classList.remove('hidden');
+                galleryGrid.classList.add('hidden');
+                zipBtn.classList.remove('flex');
+                zipBtn.classList.add('hidden');
+                galleryGrid.innerHTML = "";
+            } else {
+                emptyState.classList.add('hidden');
+                galleryGrid.classList.remove('hidden');
+                zipBtn.classList.remove('hidden');
+                zipBtn.classList.add('flex');
+
+                galleryGrid.innerHTML = appState.uploadedPhotos.map(photo => `
+                    <div class="group relative aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800/80 shadow-md transform hover:-translate-y-1 transition-all duration-300">
+                        <img src="${photo.payload}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Event Capture">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                            <div class="flex items-center justify-between text-[11px] font-medium text-slate-300">
+                                <span><i class="fa-regular fa-clock mr-1"></i>${photo.timestamp}</span>
+                                <button onclick="deletePhoto('${photo.id}')" class="text-rose-400 hover:text-rose-300 h-6 w-6 rounded-lg bg-rose-500/10 flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Functional single array target matching mutation routine logic
+        function deletePhoto(targetId) {
+            appState.uploadedPhotos = appState.uploadedPhotos.filter(photo => photo.id !== targetId);
+            renderDynamicMetrics();
+        }
+
+        // Automated JSZip download file archive construction routine algorithm
+        function triggerBatchDownload() {
+            if(appState.uploadedPhotos.length === 0) return;
+
+            const zipInstance = new JSZip();
+            const cleanFolderTitle = appState.eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const rootPhotoFolder = zipInstance.folder(cleanFolderTitle);
+
+            appState.uploadedPhotos.forEach((photoObj, index) => {
+                const base64DataRaw = photoObj.payload.split(',')[1];
+                rootPhotoFolder.file(`pichapawa_capture_${index + 1}.png`, base64DataRaw, {base64: true});
+            });
+
+            zipInstance.generateAsync({type: "blob"}).then(function(zipBlobContent) {
+                const virtualAnchorElement = document.createElement('a');
+                virtualAnchorElement.href = URL.createObjectURL(zipBlobContent);
+                virtualAnchorElement.download = `${cleanFolderTitle}_gallery_archive.zip`;
+                document.body.appendChild(virtualAnchorElement);
+                virtualAnchorElement.click();
+                document.body.removeChild(virtualAnchorElement);
+            });
+        }
+    </script>
+</body>
+  </html>
+  
